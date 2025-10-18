@@ -30,6 +30,7 @@ export default function TopBar() {
           <NavLink to="/ratings">Pagelle</NavLink>
           <NavLink to="/opponent">Avversario</NavLink>
           <NavLink to="/coach">Coach</NavLink>
+          <NavLink to="/profilazione">Profilazione</NavLink>
         </nav>
         <div className="flex items-center gap-2">
           <button className="button" onClick={logout}>Logout</button>
