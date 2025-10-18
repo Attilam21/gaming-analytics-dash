@@ -1,8 +1,13 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useAppStore } from '../app/store'
 
 export default function RosterPage() {
-  const { roster, addPlayer } = useAppStore((s) => ({ roster: s.roster, addPlayer: s.addPlayer }))
+  const { roster, addPlayer, toggleTitolare, isTitolare } = useAppStore((s) => ({
+    roster: s.roster,
+    addPlayer: s.addPlayer,
+    toggleTitolare: s.toggleTitolare,
+    isTitolare: s.isTitolare,
+  }))
 
   const [name, setName] = useState('')
   const [number, setNumber] = useState('')
@@ -16,6 +21,24 @@ export default function RosterPage() {
     setNumber('')
     setPosition('P')
   }
+
+  const playersSorted = useMemo(() => {
+    return [...roster.players].sort((a, b) => a.number - b.number)
+  }, [roster.players])
+
+  const titolariSet = useMemo(() => new Set(roster.titolari), [roster.titolari])
+  const panchinaSet = useMemo(() => new Set(roster.panchina), [roster.panchina])
+
+  const titolariPlayers = useMemo(
+    () => playersSorted.filter((p) => titolariSet.has(p.id)),
+    [playersSorted, titolariSet]
+  )
+  const panchinaPlayers = useMemo(
+    () => playersSorted.filter((p) => panchinaSet.has(p.id) && !titolariSet.has(p.id)),
+    [playersSorted, panchinaSet, titolariSet]
+  )
+
+  const remainingTitolari = (roster.maxTitolari ?? 11) - roster.titolari.length
 
   return (
     <div className="space-y-6">
@@ -50,7 +73,12 @@ export default function RosterPage() {
       </div>
 
       <div className="card p-4">
-        <h2 className="font-semibold mb-3">Rosa</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-semibold">Rosa</h2>
+          <div className="text-sm text-[var(--muted)]">
+            Titolari: {roster.titolari.length}/{roster.maxTitolari ?? 11}
+          </div>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="text-left text-[var(--muted)]">
@@ -58,23 +86,79 @@ export default function RosterPage() {
                 <th className="py-2 pr-4">#</th>
                 <th className="py-2 pr-4">Nome</th>
                 <th className="py-2 pr-4">Ruolo</th>
+                <th className="py-2 pr-4">Stato</th>
+                <th className="py-2 pr-4">Azioni</th>
               </tr>
             </thead>
             <tbody>
-              {roster.players.map((p) => (
+              {playersSorted.map((p) => (
                 <tr key={p.id} className="border-t border-[#222]">
                   <td className="py-2 pr-4">{p.number}</td>
                   <td className="py-2 pr-4">{p.name}</td>
                   <td className="py-2 pr-4">{p.position}</td>
+                  <td className="py-2 pr-4">
+                    {isTitolare(p.id) ? (
+                      <span className="text-green-400">Titolare</span>
+                    ) : (
+                      <span className="text-[var(--muted)]">Riserva</span>
+                    )}
+                  </td>
+                  <td className="py-2 pr-4">
+                    <button
+                      className="button"
+                      onClick={() => toggleTitolare(p.id)}
+                      disabled={!isTitolare(p.id) && remainingTitolari <= 0}
+                      title={!isTitolare(p.id) && remainingTitolari <= 0 ? 'Limite titolari raggiunto' : 'Toggle titolare'}
+                    >
+                      {isTitolare(p.id) ? 'Rimuovi dai Titolari' : 'Rendi Titolare'}
+                    </button>
+                  </td>
                 </tr>
               ))}
               {roster.players.length === 0 && (
                 <tr>
-                  <td colSpan={3} className="py-4 text-[var(--muted)]">Nessun giocatore inserito</td>
+                  <td colSpan={5} className="py-4 text-[var(--muted)]">Nessun giocatore inserito</td>
                 </tr>
               )}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="card p-4">
+          <h2 className="font-semibold mb-3">Titolari</h2>
+          <ul className="divide-y divide-[#222]">
+            {titolariPlayers.map((p) => (
+              <li key={p.id} className="py-2 flex items-center justify-between">
+                <span>#{p.number} {p.name} - {p.position}</span>
+                <button className="button" onClick={() => toggleTitolare(p.id)}>Rendi Riserva</button>
+              </li>
+            ))}
+            {titolariPlayers.length === 0 && (
+              <li className="py-2 text-[var(--muted)]">Nessun titolare selezionato</li>
+            )}
+          </ul>
+        </div>
+        <div className="card p-4">
+          <h2 className="font-semibold mb-3">Riserve</h2>
+          <ul className="divide-y divide-[#222]">
+            {panchinaPlayers.map((p) => (
+              <li key={p.id} className="py-2 flex items-center justify-between">
+                <span>#{p.number} {p.name} - {p.position}</span>
+                <button
+                  className="button"
+                  onClick={() => toggleTitolare(p.id)}
+                  disabled={remainingTitolari <= 0}
+                >
+                  Rendi Titolare
+                </button>
+              </li>
+            ))}
+            {panchinaPlayers.length === 0 && (
+              <li className="py-2 text-[var(--muted)]">Nessuna riserva</li>
+            )}
+          </ul>
         </div>
       </div>
     </div>

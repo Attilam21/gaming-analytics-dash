@@ -39,8 +39,6 @@ export default function DashboardPage() {
   }, [matches])
 
   const rosterByPosition = useMemo(() => {
-    const counts = matches.length // dummy to keep deps simple
-    void counts
     const groups = { P: 0, D: 0, C: 0, A: 0 }
     for (const p of roster.players) {
       if (p.position?.startsWith('P')) groups.P++

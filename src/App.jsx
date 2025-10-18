@@ -8,6 +8,7 @@ import RosterPage from './pages/Roster'
 import MatchPage from './pages/Match'
 import RatingsPage from './pages/Ratings'
 import OpponentPage from './pages/Opponent'
+import ProfilazionePage from './pages/Profilazione'
 import CoachPage from './pages/Coach'
 
 function App() {
@@ -36,6 +37,7 @@ function App() {
             <Route path="/ratings" element={<RatingsPage />} />
             <Route path="/opponent" element={<OpponentPage />} />
             <Route path="/coach" element={<CoachPage />} />
+            <Route path="/profilazione" element={<ProfilazionePage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
